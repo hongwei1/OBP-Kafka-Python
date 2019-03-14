@@ -27,8 +27,9 @@ except ImportError:
 
 
 # Define globals
-TPC_RESPONSE = "Response"
-TPC_REQUEST  = "Request"
+TPC_RESPONSE = "to.obp.api.1.caseclass.OutboundGetBanks"
+# TPC_RESPONSE = "Response"
+TPC_REQUEST  = "from.obp.api.1.to.adapter.mf.caseclass.OutboundGetBanks"
 KAFKA_GRP_ID = "1"
 #DEBUG        = False
 DEBUG        = True
@@ -60,39 +61,58 @@ def getVersion(data):
 # then pass them to obp.py for further processing 
 #
 def processMessage(message):
-  reqFunc = None 
-  reqArgs = None 
-  decoded = message.decode()
-  # extract function name 
-  version = getVersion(decoded)
-  print(version)
-  # check if function name exists in obp.py
-  module_name='obp_v'+version
-  obp = __import__(module_name)
-  reqFunc = obp.getFuncName(decoded)
-  print(reqFunc)
-  # return error if empty
-  if reqFunc == None:
-    return '{"error":"empty request"}'
-  # return error if function name if not alphanumeric 
-  if not re.match("^[a-zA-Z0-9_-]*$", reqFunc):
-    return '{"error":"llegal request"}'
-  if (hasattr(obp, reqFunc)):
-    # extract function arguments
-    reqArgs = obp.getArguments(decoded)
-    print(reqArgs)
-    # create dictionary if not empty
-    if reqArgs != None:
-      # set the data according to version
-      if version =="Nov2016" :
-        obp.data = data
-      else:
-        obp.data = data_mar2017
-      # execute function from obp.py and return result
-      return getattr(obp, reqFunc)(reqArgs)
-    return '{"error":"arguments missing"}'
-  else:
-    return '{"error":"unknown request"}'
+  # reqFunc = None
+  # reqArgs = None
+  # decoded = message.decode()
+  # # extract function name
+  # version = getVersion(decoded)
+  # print(version)
+  # # check if function name exists in obp.py
+  # module_name='obp_v'+version
+  # obp = __import__(module_name)
+  # reqFunc = obp.getFuncName(decoded)
+  # print(reqFunc)
+  # # return error if empty
+  # if reqFunc == None:
+  #   return '{"error":"empty request"}'
+  # # return error if function name if not alphanumeric
+  # if not re.match("^[a-zA-Z0-9_-]*$", reqFunc):
+  #   return '{"error":"llegal request"}'
+  # if (hasattr(obp, reqFunc)):
+  #   # extract function arguments
+  #   reqArgs = obp.getArguments(decoded)
+  #   print(reqArgs)
+  #   # create dictionary if not empty
+  #   if reqArgs != None:
+  #     # set the data according to version
+  #     if version =="Nov2016" :
+  #       obp.data = data
+  #     else:
+  #       obp.data = data_mar2017
+  #     # execute function from obp.py and return result
+  #     return getattr(obp, reqFunc)(reqArgs)
+  #   return '{"error":"arguments missing"}'
+  # else:
+    return '{    \
+  "inboundAuthInfo":{                     \
+    "cbsToken":"",                        \
+    "sessionId":""                        \
+  },                                      \
+  "status":{                              \
+    "errorCode":"",                       \
+    "backendMessages":[                   \
+      null                                \
+    ]                                     \
+  },                                      \
+  "data":[                                \
+    {                                     \
+      "bankId":"ExampleBankID",           \
+      "name":"ExampleBankName",           \
+      "logo":"ExampleBanklogo",           \
+      "url":"ExampleBankUrl"              \
+    }                                     \
+  ]                                       \
+}'
 
 # determine if running on localhost or in docker container
 kafka_host = "localhost:9092"
